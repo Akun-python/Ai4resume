@@ -1,0 +1,150 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[a4paper,margin=1.55cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{fontawesome5}
+
+\pagenumbering{gobble}
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{0pt}
+\setlist[itemize]{leftmargin=1.45em,itemsep=0.32em,topsep=0.32em,parsep=0pt,partopsep=0pt}
+
+\definecolor{ResumeInk}{HTML}{ {{ theme_tokens.resume_ink }} }
+\definecolor{ResumeAccent}{HTML}{ {{ theme_tokens.resume_accent }} }
+\definecolor{ResumeMuted}{HTML}{ {{ theme_tokens.resume_muted }} }
+\definecolor{ResumeRule}{HTML}{ {{ theme_tokens.resume_rule }} }
+\definecolor{ResumeTagBg}{HTML}{ {{ theme_tokens.resume_tag_bg }} }
+\definecolor{ResumeAccentSoft}{HTML}{ {{ theme_tokens.resume_accent_soft }} }
+
+{% raw %}
+\newcommand{\ResumeSection}[2]{
+  \vspace{0.95em}
+  {\large\bfseries\textcolor{ResumeAccent}{#1}\hspace{0.45em}\textcolor{ResumeInk}{#2}}\par
+  \vspace{0.28em}
+  {\color{ResumeRule}\rule{\linewidth}{0.8pt}}\par
+  \vspace{0.45em}
+}
+
+\newcommand{\ResumeTag}[1]{
+  {\setlength{\fboxsep}{5pt}\colorbox{ResumeTagBg}{\textcolor{ResumeInk}{\small #1}}}
+}
+{% endraw %}
+
+\begin{document}
+
+{\Huge\bfseries\textcolor{ResumeInk}{ {{ basic_info.name | default("候选人", true) | latex_escape }} }}\par
+
+{% if contact_items %}
+\vspace{0.35em}
+{\small
+{% for item in contact_items %}
+{% if not loop.first %}\hspace{0.9em}\textcolor{ResumeRule}{|}\hspace{0.9em}{% endif %}
+\textcolor{ResumeAccent}{ {{ item.icon_latex }} }\hspace{0.3em}
+{% if item.href %}
+\href{ {{- item.href -}} }{\textcolor{ResumeMuted}{ {{ item.text | latex_escape }} }}
+{% else %}
+\textcolor{ResumeMuted}{ {{ item.text | latex_escape }} }
+{% endif %}
+{% endfor %}
+}\par
+{% endif %}
+
+\vspace{0.45em}
+{\color{ResumeAccent}\rule{\linewidth}{1.2pt}}\par
+\vspace{0.15em}
+{\color{ResumeAccentSoft}\rule{\linewidth}{0.8pt}}\par
+
+{% if 'summary' in selected_sections and section_content.summary %}
+\ResumeSection{ {{ section_meta.summary.icon_latex }} }{ {{ section_meta.summary.title | latex_escape }} }
+\textcolor{ResumeInk}{\small {{ section_content.summary | latex_escape }} }\par
+{% endif %}
+
+{% if 'skills' in selected_sections and skill_groups %}
+\ResumeSection{ {{ section_meta.skills.icon_latex }} }{ {{ section_meta.skills.title | latex_escape }} }
+{% for group in skill_groups %}
+\textcolor{ResumeAccent}{ {{ group.icon_latex }} }\hspace{0.35em}\textbf{\textcolor{ResumeInk}{ {{ group.title | latex_escape }} }}\par
+\vspace{0.18em}
+{% for item in group["items"] %}
+\ResumeTag{ {{ item | latex_escape }} }{% if not loop.last %}\hspace{0.38em}{% endif %}
+{% endfor %}
+\par
+{% if not loop.last %}\vspace{0.45em}{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if 'experience' in selected_sections and experience %}
+\ResumeSection{ {{ section_meta.experience.icon_latex }} }{ {{ section_meta.experience.title | latex_escape }} }
+{% for item in experience %}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+\textbf{\textcolor{ResumeInk}{ {{ item.company | latex_escape }} }} &
+\textcolor{ResumeMuted}{\small {{ item.start_date | default("", true) | latex_escape }}{% if item.start_date or item.end_date %}{% if item.start_date and item.end_date %} -- {% endif %}{{ item.end_date | default("", true) | latex_escape }}{% endif %}} \\
+{% if item.title %}
+\textcolor{ResumeMuted}{\small {{ item.title | latex_escape }}} &
+{% else %}
+&
+{% endif %}
+\end{tabularx}
+{% set bullets = item.bullets if item.bullets is defined else item.highlights %}
+{% if bullets %}
+\begin{itemize}[label=\textcolor{ResumeAccent}{\scriptsize\faAngleRight}]
+{% for point in bullets %}
+\item \small {{ point | latex_escape }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+{% if not loop.last %}\vspace{0.35em}{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if 'projects' in selected_sections and projects %}
+\ResumeSection{ {{ section_meta.projects.icon_latex }} }{ {{ section_meta.projects.title | latex_escape }} }
+{% for project in projects %}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+\textbf{\textcolor{ResumeInk}{ {{ project.name | latex_escape }} }} &
+\textcolor{ResumeMuted}{\small {{ project.start_date | default("", true) | latex_escape }}{% if project.start_date or project.end_date %}{% if project.start_date and project.end_date %} -- {% endif %}{{ project.end_date | default("", true) | latex_escape }}{% endif %}} \\
+{% if project.role %}
+\textcolor{ResumeMuted}{\small {{ project.role | latex_escape }}} &
+{% else %}
+&
+{% endif %}
+\end{tabularx}
+{% set bullets = project.bullets if project.bullets is defined else project.highlights %}
+{% if bullets %}
+\begin{itemize}[label=\textcolor{ResumeAccent}{\scriptsize\faAngleRight}]
+{% for point in bullets %}
+\item \small {{ point | latex_escape }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+{% if not loop.last %}\vspace{0.35em}{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if 'education' in selected_sections and education %}
+\ResumeSection{ {{ section_meta.education.icon_latex }} }{ {{ section_meta.education.title | latex_escape }} }
+{% for item in education %}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+\textbf{\textcolor{ResumeInk}{ {{ item.school | latex_escape }} }} &
+\textcolor{ResumeMuted}{\small {{ item.start_date | default("", true) | latex_escape }}{% if item.start_date or item.end_date %}{% if item.start_date and item.end_date %} -- {% endif %}{{ item.end_date | default("", true) | latex_escape }}{% endif %}} \\
+\textcolor{ResumeMuted}{\small {{ item.degree | default("", true) | latex_escape }}{% if item.degree and item.major %} / {% endif %}{{ item.major | default("", true) | latex_escape }}} &
+{% if item.highlights %}
+\textcolor{ResumeMuted}{}
+{% else %}
+&
+{% endif %}
+\end{tabularx}
+{% set details = item.details if item.details is defined else item.highlights %}
+{% if details %}
+\begin{itemize}[label=\textcolor{ResumeAccent}{\scriptsize\faAngleRight}]
+{% for point in details %}
+\item \small {{ point | latex_escape }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+{% if not loop.last %}\vspace{0.25em}{% endif %}
+{% endfor %}
+{% endif %}
+
+\end{document}

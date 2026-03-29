@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        fonts-noto-cjk \
+        texlive-fonts-recommended \
+        texlive-lang-chinese \
+        texlive-latex-extra \
+        texlive-xetex \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md ./
+COPY app ./app
+COPY worker ./worker
+
+RUN pip install --no-cache-dir .
+
+CMD ["celery", "-A", "app.infra.queue.celery_app.celery_app", "worker", "--loglevel=info", "-Q", "resume"]
